@@ -1,14 +1,17 @@
+from fastapi import FastAPI, Request
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
+
+# Existing imports and setup
 import os
 import requests
 from dotenv import load_dotenv
-
 from pydantic import BaseModel
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import HTTPException
 
 load_dotenv()
 
-# Replace with your Hugging Face API token
 HUGGINGFACE_API_TOKEN = os.getenv("HUGGINGFACE_API_TOKEN")
 HUGGINGFACE_INFERENCE_URL = "https://api-inference.huggingface.co/models/facebook/bart-large-cnn"
 
@@ -19,21 +22,26 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Allow requests from the React frontend
     allow_credentials=True,
-    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
-    allow_headers=["*"],  # Allow all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
+
+# Serve static files from the React build directory
+app.mount("/static", StaticFiles(directory="frontend/build/static"), name="static")
+
+@app.get("/{full_path:path}")
+async def serve_react_app(full_path: str):
+    return FileResponse("frontend/build/index.html")
 
 class TextRequest(BaseModel):
     text: str
 
-@app.post("/summarize/")
+@app.post("/api/summarize/")
 async def summarize(request: TextRequest):
     try:
-        # Ensure the input text is not empty
         if not request.text.strip():
             raise HTTPException(status_code=400, detail="Input text cannot be empty.")
 
-        # Prepare headers and payload for the Hugging Face API
         headers = {
             "Authorization": f"Bearer {HUGGINGFACE_API_TOKEN}",
             "Content-Type": "application/json",
@@ -47,16 +55,10 @@ async def summarize(request: TextRequest):
             },
         }
 
-        # Send a POST request to the Hugging Face API
         response = requests.post(HUGGINGFACE_INFERENCE_URL, headers=headers, json=payload)
-        response.raise_for_status()  # Raise an exception for HTTP errors
+        response.raise_for_status()
 
-        # Parse the response
         summary = response.json()[0]['summary_text']
         return {"summary": summary}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)

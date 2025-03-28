@@ -62,7 +62,7 @@ Ensure you have the following installed:
 3. View the summarized text and copy or save it if needed.
 
 ## API Endpoints
-- **POST /summarize/**: Accepts a JSON request with a `text` field and returns the summarized text.
+- **POST /api/summarize/**: Accepts a JSON request with a `text` field and returns the summarized text.
 
 ## License
 This project is open-source and available under the MIT License.

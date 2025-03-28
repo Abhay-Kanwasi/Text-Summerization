@@ -24,8 +24,8 @@
         "dest": "frontend"
       },
       {
-        "src": "/summarize/",
-        "dest": "backend/summarize/"
+        "src": "/api/summarize/",
+        "dest": "backend/api/summarize/"
       }
     ]
   }
