@@ -26,15 +26,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve static files from the React build directory
-app.mount("/static", StaticFiles(directory="frontend/build/static"), name="static")
-
-@app.get("/{full_path:path}")
-async def serve_react_app(full_path: str):
-    return FileResponse("frontend/build/index.html")
-
 class TextRequest(BaseModel):
     text: str
+
+@app.get("/")
+async def main():
+    return {"sucess": "successfully deploy"}
 
 @app.post("/api/summarize/")
 async def summarize(request: TextRequest):
